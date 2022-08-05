@@ -2,9 +2,9 @@ import os
 
 import imageio
 import numpy as np
-
+import imgaug.augmenters as iaa
 from ISR.utils.logger import get_logger
-
+ia.seed(1)
 
 class MedicalImageHandler:
     def __init__(self, lr_dir, hr_dir, patch_size, scale, medical_width, medical_height,  resize = False, factor = 1, n_validation_samples=None):
@@ -141,6 +141,27 @@ class MedicalImageHandler:
         
         return img
     
+    def _augment_batch(self, batch, augmentations):
+        """ Transforms each individual image of the batch independently (due to randomness in the augmentator). """
+        
+        augment_result = [self._apply_data_augmentation(img, augmentations) for i, img in enumerate(batch)]
+        
+        lr_aug_t_batch = np.array(
+            [t[0] for t in augment_result]
+        )
+        hr_aug_t_batch = np.array(
+            [t[1] for t in augment_result]
+        )
+
+        return lr_aug_t_batch, hr_aug_t_batch
+    
+    def _apply_data_augmentation(self, batch, augmentor):
+        """ Augment images according to augmentor. """
+        
+        # the transform applied simutaneous to lr and hr images
+        lr_aug, hr_aug = augmentor(image=batch['lr'], heatmaps=batch['hr'])
+        return lr_aug, hr_aug
+    
     def _transform_batch(self, batch, transforms):
         """ Transforms each individual image of the batch independently. """
         
@@ -148,7 +169,7 @@ class MedicalImageHandler:
             [self._apply_transform(img, transforms[i]) for i, img in enumerate(batch)]
         )
         return t_batch
-    
+
     def get_batch(self, batch_size, idx=None, flatness=0.0):
         """
         Returns a dictionary with keys ('lr', 'hr') containing training batches
@@ -166,12 +187,29 @@ class MedicalImageHandler:
         img = {}
         for res in ['lr', 'hr']:
             img_path = os.path.join(self.folders[res], self.img_list[res][idx])
-            img[res] = imageio.imread(img_path) / 255.0
+            #img[res] = imageio.imread(img_path) / 255.0
+            img[res] = self._read_raw_medical(img_path) # read the raw data
+
         batch = self._crop_imgs(img, batch_size, flatness)
-        transforms = np.random.randint(0, 3, (batch_size, 2))
-        batch['lr'] = self._transform_batch(batch['lr'], transforms)
-        batch['hr'] = self._transform_batch(batch['hr'], transforms)
         
+        # random transform the images, we can also run this multiple times and use it to augment the data
+        transforms = np.random.randint(0, 3, (batch_size, 2))
+        batch['lr_affine'] = self._transform_batch(batch['lr'], transforms)
+        batch['hr_affine'] = self._transform_batch(batch['hr'], transforms)
+        
+        # get all pre-define augmentions
+        augmentions = self._get_valid_augmentions()
+        for augment_idx in len(augmentions):
+            batch['lr_aug_%d'%augment_idx], batch['hr_aug_%d'%augment_idx] = self._augment_batch(batch, augmentions[augment_idx])
+        
+        # combine all the results into the bigger batch
+        batch['lr']
+        batch['hr']
+        batch['lr_affine']
+        batch['lr_affine']
+        for augment_idx in len(augmentions):
+            batch['lr_aug_%d'%augment_idx], batch['hr_aug_%d'%augment_idx]
+
         return batch
     
     def get_validation_batches(self, batch_size):
@@ -212,3 +250,85 @@ class MedicalImageHandler:
             raise ValueError(
                 'No validation set size specified. (not operating in a validation set?)'
             )
+
+
+    def _get_valid_augmentions(self):
+        """ Generate pre_defined data augmentation templates (use the python imgaug lib). """
+
+        seq1 = iaa.Sequential([
+                iaa.Dropout(0.2),
+                iaa.Affine(rotate=(-45, 45)
+        ], random_order=True) # apply augmenters in random order
+
+        seq2 = iaa.Sequential([
+                iaa.Fliplr(0.5), # horizontal flips
+                iaa.Crop(percent=(0, 0.1)), # random crops
+                iaa.Sometimes(
+                    0.5,
+                    iaa.GaussianBlur(sigma=(0, 0.5))
+                )
+        ], random_order=True) # apply augmenters in random order
+
+        seq3 = iaa.Sequential([
+                iaa.Fliplr(0.5), # horizontal flips
+                iaa.Crop(percent=(0, 0.1)), # random crops
+                iaa.Sometimes(
+                    0.5,
+                    iaa.GaussianBlur(sigma=(0, 0.5))
+                ),
+                
+                iaa.LinearContrast((0.75, 1.5)),
+                iaa.Affine(
+                    scale={"x": (0.8, 1.2), "y": (0.8, 1.2)},
+                    translate_percent={"x": (-0.2, 0.2), "y": (-0.2, 0.2)},
+                    rotate=(-25, 25),
+                    shear=(-8, 8)
+                )
+        
+        ], random_order=True) # apply augmenters in random order
+
+        seq4 = iaa.Sequential([
+                iaa.Fliplr(0.5), # horizontal flips
+                iaa.Crop(percent=(0, 0.1)), # random crops
+                iaa.Sometimes(
+                    0.5,
+                    iaa.GaussianBlur(sigma=(0, 0.5))
+                ),
+                
+                iaa.LinearContrast((0.75, 1.5)),
+                iaa.Affine(
+                    scale={"x": (0.8, 1.2), "y": (0.8, 1.2)},
+                    translate_percent={"x": (-0.2, 0.2), "y": (-0.2, 0.2)},
+                    rotate=(-25, 25),
+                    shear=(-8, 8)
+                )
+        
+        ], random_order=True) # apply augmenters in random order
+
+        seq5 = iaa.Sequential([
+                iaa.Fliplr(0.5), # horizontal flips
+                iaa.Crop(percent=(0, 0.1)), # random crops
+                iaa.Sometimes(
+                    0.5,
+                    iaa.GaussianBlur(sigma=(0, 0.5))
+                ),
+                
+                iaa.LinearContrast((0.75, 1.5)),
+                iaa.AdditiveGaussianNoise(loc=0, scale=(0.0, 0.05*255), per_channel=0.5),
+                iaa.Multiply((0.8, 1.2), per_channel=0.2),
+                iaa.Affine(
+                    scale={"x": (0.8, 1.2), "y": (0.8, 1.2)},
+                    translate_percent={"x": (-0.2, 0.2), "y": (-0.2, 0.2)},
+                    rotate=(-25, 25),
+                    shear=(-8, 8)
+                )
+        
+        ], random_order=True) # apply augmenters in random order
+
+        augmentions = [seq1, seq2, seq3, seq4, seq5]
+
+        return augmentions
+
+    def _read_raw_medical(self, img_path):
+        """ Read the .raw and return the n gray image as a list of np.array. """
+        
