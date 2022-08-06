@@ -33,10 +33,14 @@ trainer = Trainer(
     generator=rrdn,
     discriminator=discr,
     feature_extractor=f_ext,
-    lr_train_dir='./data/train/lr/',
-    hr_train_dir='./data/train/hr/',
-    lr_valid_dir='./data/validation/lr/',
-    hr_valid_dir='./data/validation/hr/',
+    #lr_train_dir='./data/train/lr/',
+    #hr_train_dir='./data/train/hr/',
+    #lr_valid_dir='./data/validation/lr/',
+    #hr_valid_dir='./data/validation/hr/',
+    lr_train_dir='../train/lr/',
+    hr_train_dir='../train/hr/',
+    lr_valid_dir='../validation/lr/',
+    hr_valid_dir='../validation/hr/',
     loss_weights=loss_weights,
     learning_rate=learning_rate,
     flatness=flatness,
@@ -44,5 +48,12 @@ trainer = Trainer(
     log_dirs=log_dirs,
     weights_generator=None,
     weights_discriminator=None,
-    n_validation=40,
+    n_validation=1,
+)
+
+trainer.train(
+    epochs=1,
+    steps_per_epoch=20,
+    batch_size=4,
+    monitored_metrics={'val_generator_PSNR_Y': 'max'}
 )
