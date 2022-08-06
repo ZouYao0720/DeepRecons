@@ -4,20 +4,21 @@ import imageio
 import numpy as np
 import imgaug.augmenters as iaa
 from ISR.utils.logger import get_logger
-ia.seed(1)
+iaa.seed(1)
 
 class MedicalImageHandler:
-    def __init__(self, lr_dir, hr_dir, patch_size, scale, medical_width, medical_height,  resize = False, factor = 1, n_validation_samples=None):
+    def __init__(self, lr_dir, hr_dir, patch_size, scale,  resize = False, factor = 1, n_validation_samples=None):
         self.folders = {'hr': hr_dir, 'lr': lr_dir}  # image folders
         self.extensions = ('.raw')  # admissible extension
         self.img_list = {}  # list of file names
-        self.width = medical_width
-        self.height = medical_height
+        self.width = 512
+        self.height = 512
         self.resize = resize
         self.factor = factor
         self.n_validation_samples = n_validation_samples
         self.patch_size = patch_size
         self.scale = scale
+        self.max_value = 65535.0
         self.patch_size = {'lr': patch_size, 'hr': patch_size * self.scale}
         self.logger = get_logger(__name__)
         self._make_img_list()
@@ -44,7 +45,7 @@ class MedicalImageHandler:
         
         # the order of these asserts is important for testing
         assert len(self.img_list['hr']) == self.img_list['hr'].shape[0], 'UnevenDatasets'
-        assert self._matching_datasets(), 'Input/LabelsMismatch'
+        #assert self._matching_datasets(), 'Input/LabelsMismatch'
     
     def _matching_datasets(self):
         """ Rough file name matching between lr and hr directories. """
@@ -180,37 +181,45 @@ class MedicalImageHandler:
             flatness: float in [0,1], is the patch "flatness" threshold.
                 Determines what level of detail the patches need to meet. 0 means any patch is accepted.
         """
-        
+
         if not idx:
             # randomly select one image. idx is given at validation time.
             idx = np.random.choice(range(len(self.img_list['hr'])))
         img = {}
-        for res in ['lr', 'hr']:
-            img_path = os.path.join(self.folders[res], self.img_list[res][idx])
-            #img[res] = imageio.imread(img_path) / 255.0
-            img[res] = self._read_raw_medical(img_path) # read the raw data
+        medical_img = {}
+        img_path = os.path.join(self.folders['lr'], self.img_list['lr'][idx])
+        medical_img['lr'] = self._read_raw_medical(img_path)
+        img_path = os.path.join(self.folders['hr'], self.img_list['hr'][idx])
+        medical_img['hr'] = self._read_raw_medical(img_path)
 
-        batch = self._crop_imgs(img, batch_size, flatness)
+        ### medical_img with size slices * self.width* self.height
+        batches = []
+        ### iterate every slice in a 3D medical raw image to make fully useage of the data
+        for slice in range(self.slices):
+            for res in ['lr', 'hr']:
+                img[res] = medical_img[res][slice,:,:].reshape(self.width, self.height, 1) ## for cv data it is a RGB 3 channel image, reshape to a grep image with one channel
+                
+            batch = self._crop_imgs(img, batch_size, flatness)
+            # random transform the images, we can also run this multiple times and use it to augment the data
+            transforms = np.random.randint(0, 3, (batch_size, 2))
+            batch['lr_affine'] = self._transform_batch(batch['lr'], transforms)
+            batch['hr_affine'] = self._transform_batch(batch['hr'], transforms)
         
-        # random transform the images, we can also run this multiple times and use it to augment the data
-        transforms = np.random.randint(0, 3, (batch_size, 2))
-        batch['lr_affine'] = self._transform_batch(batch['lr'], transforms)
-        batch['hr_affine'] = self._transform_batch(batch['hr'], transforms)
+            # get all pre-define augmentions
+            augmentions = self._get_valid_augmentions()
+            for augment_idx in range(len(augmentions)):
+                batch['lr_aug_%d'%augment_idx], batch['hr_aug_%d'%augment_idx] = self._augment_batch(batch, augmentions[augment_idx])
         
-        # get all pre-define augmentions
-        augmentions = self._get_valid_augmentions()
-        for augment_idx in len(augmentions):
-            batch['lr_aug_%d'%augment_idx], batch['hr_aug_%d'%augment_idx] = self._augment_batch(batch, augmentions[augment_idx])
-        
-        # combine all the results into the bigger batch
-        batch['lr']
-        batch['hr']
-        batch['lr_affine']
-        batch['lr_affine']
-        for augment_idx in len(augmentions):
-            batch['lr_aug_%d'%augment_idx], batch['hr_aug_%d'%augment_idx]
+            # combine all the results into the bigger batch
+            batch['lr']
+            batch['hr']
+            batch['lr_affine']
+            batch['lr_affine']
+            for augment_idx in len(augmentions):
+                batch['lr_aug_%d'%augment_idx], batch['hr_aug_%d'%augment_idx]
 
-        return batch
+            batches.append(batch)
+        return batches
     
     def get_validation_batches(self, batch_size):
         """ Returns a batch for each image in the validation set. """
@@ -218,7 +227,7 @@ class MedicalImageHandler:
         if self.n_validation_samples:
             batches = []
             for idx in range(self.n_validation_samples):
-                batches.append(self.get_batch(batch_size, idx, flatness=0.0))
+                batches = batches + (self.get_batch(batch_size, idx, flatness=0.0))
             return batches
         else:
             self.logger.error(
@@ -257,7 +266,7 @@ class MedicalImageHandler:
 
         seq1 = iaa.Sequential([
                 iaa.Dropout(0.2),
-                iaa.Affine(rotate=(-45, 45)
+                iaa.Affine(rotate=(-45, 45))
         ], random_order=True) # apply augmenters in random order
 
         seq2 = iaa.Sequential([
@@ -331,4 +340,11 @@ class MedicalImageHandler:
 
     def _read_raw_medical(self, img_path):
         """ Read the .raw and return the n gray image as a list of np.array. """
-        
+        f = open(img_path, 'rb')
+        img_str = f.read()
+        img_arr = np.frombuffer(img_str, np.uint16)
+        pages = int(len(img_arr)/(self.width*self.height))
+        self.slices = pages
+        img_arr = np.reshape(img_arr,(pages,self.width,self.height))/self.max_value
+        f.close()
+        return img_arr
