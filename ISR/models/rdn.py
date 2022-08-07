@@ -196,7 +196,7 @@ class RDN(ImageModel):
         return concatenate(rdb_concat, axis=3, name='LRLs_Concat')
     
     def _build_rdn(self):
-        LR_input = Input(shape=(self.patch_size, self.patch_size, 3), name='LR')
+        LR_input = Input(shape=(self.patch_size, self.patch_size, 1), name='LR') # gray image
         F_m1 = Conv2D(
             self.G0,
             kernel_size=self.kernel_size,

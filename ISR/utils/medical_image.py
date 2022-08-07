@@ -193,33 +193,40 @@ class MedicalImageHandler:
         medical_img['hr'] = self._read_raw_medical(img_path)
 
         ### medical_img with size slices * self.width* self.height
-        batches = []
+        batches_lr = []
+        batches_hr = []
+        
         ### iterate every slice in a 3D medical raw image to make fully useage of the data
-        for slice in range(self.slices):
+        for slice_idx in range(self.slices):
             for res in ['lr', 'hr']:
-                img[res] = medical_img[res][slice,:,:].reshape(self.width, self.height, 1) ## for cv data it is a RGB 3 channel image, reshape to a grep image with one channel
+                img[res] = medical_img[res][slice_idx,:,:].reshape(self.width, self.height, 1) ## for cv data it is a RGB 3 channel image, reshape to a grep image with one channel
                 
             batch = self._crop_imgs(img, batch_size, flatness)
             # random transform the images, we can also run this multiple times and use it to augment the data
             transforms = np.random.randint(0, 3, (batch_size, 2))
             batch['lr_affine'] = self._transform_batch(batch['lr'], transforms)
             batch['hr_affine'] = self._transform_batch(batch['hr'], transforms)
-        
+            
+            # combine all the results into the bigger batch
+            batches_lr.append(batch['lr'])
+            batches_lr.append(batch['lr_affine'])
+            batches_hr.append(batch['hr'])
+            batches_hr.append(batch['hr_affine'])
+            
             # get all pre-define augmentions
             augmentions = self._get_valid_augmentions()
             for augment_idx in range(len(augmentions)):
                 batch['lr_aug_%d'%augment_idx], batch['hr_aug_%d'%augment_idx] = self._augment_batch(batch, augmentions[augment_idx])
+                batches_lr.append(batch['lr_aug_%d'%augment_idx])
+                batches_hr.append(batch['hr_aug_%d'%augment_idx])
         
-            # combine all the results into the bigger batch
-            batch['lr']
-            batch['hr']
-            batch['lr_affine']
-            batch['lr_affine']
-            for augment_idx in len(augmentions):
-                batch['lr_aug_%d'%augment_idx], batch['hr_aug_%d'%augment_idx]
-
-            batches.append(batch)
-        return batches
+        # final_batch * self.width* self.height
+        # final_batch = slices * augment_for each slice
+        final_batches = {'lr': np.asarray(batches_lr),
+                        'hr': np.asarray(batches_hr)
+                        }
+        
+        return final_batches
     
     def get_validation_batches(self, batch_size):
         """ Returns a batch for each image in the validation set. """

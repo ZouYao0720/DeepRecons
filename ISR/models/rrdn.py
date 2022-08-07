@@ -152,7 +152,7 @@ class RRDN(ImageModel):
         return PixelShuffle(self.scale)(x)
     
     def _build_rdn(self):
-        LR_input = Input(shape=(self.patch_size, self.patch_size, 3), name='LR_input')
+        LR_input = Input(shape=(self.patch_size, self.patch_size, 1), name='LR_input')
         pre_blocks = Conv2D(
             self.G0,
             kernel_size=self.kernel_size,

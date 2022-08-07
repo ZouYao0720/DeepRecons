@@ -15,6 +15,7 @@ from ISR.utils.metrics import PSNR_Y
 from ISR.utils.logger import get_logger
 from ISR.utils.utils import check_parameter_keys
 from ISR.utils.medical_image import MedicalImageHandler
+#from ISR.utils.datahandler import DataHandler
 
 
 class Trainer:
