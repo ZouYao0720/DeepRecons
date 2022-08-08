@@ -200,7 +200,9 @@ class MedicalImageHandler:
         for slice_idx in range(self.slices):
             for res in ['lr', 'hr']:
                 img[res] = medical_img[res][slice_idx,:,:].reshape(self.width, self.height, 1) ## for cv data it is a RGB 3 channel image, reshape to a grep image with one channel
-                
+            
+            # batch['lr']: np.array: batch size, patch size * patch size
+            # batch['hr']: np.array: batch size, patch size * patch size
             batch = self._crop_imgs(img, batch_size, flatness)
             # random transform the images, we can also run this multiple times and use it to augment the data
             transforms = np.random.randint(0, 3, (batch_size, 2))
@@ -208,6 +210,8 @@ class MedicalImageHandler:
             batch['hr_affine'] = self._transform_batch(batch['hr'], transforms)
             
             # combine all the results into the bigger batch
+            print (batch['lr'].shape)
+            print (batch['lr_affine'].shape)
             batches_lr.append(batch['lr'])
             batches_lr.append(batch['lr_affine'])
             batches_hr.append(batch['hr'])
@@ -217,11 +221,12 @@ class MedicalImageHandler:
             augmentions = self._get_valid_augmentions()
             for augment_idx in range(len(augmentions)):
                 batch['lr_aug_%d'%augment_idx], batch['hr_aug_%d'%augment_idx] = self._augment_batch(batch, augmentions[augment_idx])
+                print (batch['lr_aug_%d'%augment_idx].shape)
                 batches_lr.append(batch['lr_aug_%d'%augment_idx])
                 batches_hr.append(batch['hr_aug_%d'%augment_idx])
-        
+
         # final_batch * self.width* self.height
-        # final_batch = slices * augment_for each slice
+        # final_batch = slices * (2*batch+1)
         final_batches = {'lr': np.asarray(batches_lr),
                         'hr': np.asarray(batches_hr)
                         }
