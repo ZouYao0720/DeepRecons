@@ -1,13 +1,12 @@
 Metadata-Version: 2.1
 Name: ISR
-Version: 2.2.0
+Version: 2.2.1
 Summary: Image Super Resolution
-Home-page: UNKNOWN
 Author: Francesco Cardinale
 Author-email: testadicardi@gmail.com
 License: Apache 2.0
 Platform: UNKNOWN
-Classifier: Development Status :: 4 - Beta
+Classifier: Development Status :: 5 - Beta
 Classifier: Intended Audience :: Developers
 Classifier: Intended Audience :: Education
 Classifier: Intended Audience :: Science/Research

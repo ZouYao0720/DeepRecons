@@ -8,12 +8,14 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import TensorBoard
 from tensorflow.keras import backend as K
 
-from ISR.utils.datahandler import DataHandler
+#from ISR.utils.datahandler import DataHandler
 from ISR.utils.train_helper import TrainerHelper
 from ISR.utils.metrics import PSNR
 from ISR.utils.metrics import PSNR_Y
 from ISR.utils.logger import get_logger
 from ISR.utils.utils import check_parameter_keys
+from ISR.utils.medical_image import MedicalImageHandler
+#from ISR.utils.datahandler import DataHandler
 
 
 class Trainer:
@@ -124,14 +126,14 @@ class Trainer:
             fallback_save_every_n_epochs=fallback_save_every_n_epochs,
         )
 
-        self.train_dh = DataHandler(
+        self.train_dh = MedicalImageHandler(
             lr_dir=lr_train_dir,
             hr_dir=hr_train_dir,
             patch_size=self.lr_patch_size,
             scale=self.scale,
             n_validation_samples=None,
         )
-        self.valid_dh = DataHandler(
+        self.valid_dh = MedicalImageHandler(
             lr_dir=lr_valid_dir,
             hr_dir=hr_valid_dir,
             patch_size=self.lr_patch_size,

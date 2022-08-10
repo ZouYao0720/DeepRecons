@@ -8,7 +8,7 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import TensorBoard
 from tensorflow.keras import backend as K
 
-from ISR.utils.datahandler import DataHandler
+#from ISR.utils.datahandler import DataHandler
 from ISR.utils.train_helper import TrainerHelper
 from ISR.utils.metrics import PSNR
 from ISR.utils.metrics import PSNR_Y
