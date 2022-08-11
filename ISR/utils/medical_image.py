@@ -146,7 +146,10 @@ class MedicalImageHandler:
     def _augment_batch(self, batch, augmentations):
         """ Transforms each individual image of the batch independently (due to randomness in the augmentator). """
         
-        augment_result = [self._apply_data_augmentation(img, augmentations) for i, img in enumerate(batch)]
+        augment_result = []
+        for idx in range(batch['lr'].shape[0]):
+            tmp_pair = self._apply_data_augmentation(batch['lr'][idx,:,:], batch['hr'][idx,:,:], augmentations)
+            augment_result.append(tmp_pair)
         
         lr_aug_t_batch = np.array(
             [t[0] for t in augment_result]
@@ -157,11 +160,13 @@ class MedicalImageHandler:
 
         return lr_aug_t_batch, hr_aug_t_batch
     
-    def _apply_data_augmentation(self, batch, augmentor):
+    def _apply_data_augmentation(self, lr_image, hr_image, augmentor):
         """ Augment images according to augmentor. """
         
         # the transform applied simutaneous to lr and hr images
-        lr_aug, hr_aug = augmentor(image=batch['lr'], heatmaps=batch['hr'])
+        print ('lr_image', lr_image.shape)
+        print ('hr_image', hr_image.shape)
+        lr_aug, hr_aug = augmentor(image=lr_image, heatmaps=hr_image)
         return lr_aug, hr_aug
     
     def _transform_batch(self, batch, transforms):
@@ -211,8 +216,8 @@ class MedicalImageHandler:
             batch['hr_affine'] = self._transform_batch(batch['hr'], transforms)
             
             # combine all the results into the bigger batch
-            print (batch['lr'].shape)
-            print (batch['lr_affine'].shape)
+            print ('lr', batch['lr'].shape) # 4*40*40*1
+            print ('lr_affine', batch['lr_affine'].shape) # 4*40*40*1
             batches_lr.append(batch['lr'])
             batches_lr.append(batch['lr_affine'])
             batches_hr.append(batch['hr'])
@@ -222,16 +227,21 @@ class MedicalImageHandler:
             augmentions = self._get_valid_augmentions()
             for augment_idx in range(len(augmentions)):
                 batch['lr_aug_%d'%augment_idx], batch['hr_aug_%d'%augment_idx] = self._augment_batch(batch, augmentions[augment_idx])
-                print (batch['lr_aug_%d'%augment_idx].shape)
+                
+                print ('lr_aug_%d'%augment_idx, batch['lr_aug_%d'%augment_idx].shape)
+                print ('hr_aug_%d'%augment_idx, batch['hr_aug_%d'%augment_idx].shape)
+
                 batches_lr.append(batch['lr_aug_%d'%augment_idx])
                 batches_hr.append(batch['hr_aug_%d'%augment_idx])
 
         # final_batch * self.width* self.height
-        # final_batch = slices * (2*batch+1)
+        # final_batch = slices * (1+1+5)*batch)
         final_batches = {'lr': np.asarray(batches_lr),
                         'hr': np.asarray(batches_hr)
                         }
         
+        print ('final batch lr', final_batches['lr'].shape)
+
         return final_batches
     
     def get_validation_batches(self, batch_size):
