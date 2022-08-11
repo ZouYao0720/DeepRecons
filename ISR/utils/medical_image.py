@@ -148,7 +148,7 @@ class MedicalImageHandler:
         
         augment_result = []
         for idx in range(batch['lr'].shape[0]):
-            tmp_pair = self._apply_data_augmentation(batch['lr'][idx,:,:], batch['hr'][idx,:,:], augmentations)
+            tmp_pair = self._apply_data_augmentation(batch['lr'][idx,:,:,:], batch['hr'][idx,:,:,:], augmentations)
             augment_result.append(tmp_pair)
         
         lr_aug_t_batch = np.array(
