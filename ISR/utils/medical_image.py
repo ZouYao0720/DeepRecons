@@ -147,6 +147,9 @@ class MedicalImageHandler:
         """ Transforms each individual image of the batch independently (due to randomness in the augmentator). """
         
         augment_result = []
+        print ('lr_shape_0', batch['lr'].shape[0])
+        print (batch['lr'].shape)
+        
         for idx in range(batch['lr'].shape[0]):
             tmp_pair = self._apply_data_augmentation(batch['lr'][idx,:,:,:], batch['hr'][idx,:,:,:], augmentations)
             augment_result.append(tmp_pair)
