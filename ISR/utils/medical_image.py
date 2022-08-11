@@ -5,7 +5,7 @@ import numpy as np
 import imgaug as ia
 import imgaug.augmenters as iaa
 from ISR.utils.logger import get_logger
-iaa.seed(1)
+ia.seed(1)
 
 class MedicalImageHandler:
     def __init__(self, lr_dir, hr_dir, patch_size, scale,  resize = False, factor = 1, n_validation_samples=None):
