@@ -176,7 +176,7 @@ class Trainer:
         as well as discriminator and geature extractor, if any are defined.
         """
 
-        lr = Input(shape=(self.lr_patch_size,) * 2 + (3,))
+        lr = Input(shape=(self.lr_patch_size,) * 2 + (1,))
         sr = self.generator.model(lr)
         outputs = [sr]
         losses = [self.losses['generator']]

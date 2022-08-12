@@ -30,7 +30,7 @@ def get_network(weights):
         name = WEIGHTS_URLS[weights]['name']
     else:
         raise ValueError('Available RRDN network weights: {}'.format(list(WEIGHTS_URLS.keys())))
-    c_dim = 3
+    c_dim = 1
     kernel_size = 3
     return arch_params, c_dim, kernel_size, url, name
 
@@ -67,7 +67,7 @@ class RRDN(ImageModel):
     """
     
     def __init__(
-            self, arch_params={}, patch_size=None, beta=0.2, c_dim=3, kernel_size=3, init_val=0.05, weights=''
+            self, arch_params={}, patch_size=None, beta=0.2, c_dim=1, kernel_size=3, init_val=0.05, weights=''
     ):
         if weights:
             arch_params, c_dim, kernel_size, url, fname = get_network(weights)
@@ -152,7 +152,7 @@ class RRDN(ImageModel):
         return PixelShuffle(self.scale)(x)
     
     def _build_rdn(self):
-        LR_input = Input(shape=(self.patch_size, self.patch_size, 3), name='LR_input')
+        LR_input = Input(shape=(self.patch_size, self.patch_size, 1), name='LR_input')
         pre_blocks = Conv2D(
             self.G0,
             kernel_size=self.kernel_size,

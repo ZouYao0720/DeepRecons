@@ -40,7 +40,7 @@ def get_network(weights):
         name = WEIGHTS_URLS[weights]['name']
     else:
         raise ValueError('Available RDN network weights: {}'.format(list(WEIGHTS_URLS.keys())))
-    c_dim = 3
+    c_dim = 1
     kernel_size = 3
     upscaling = 'ups'
     return arch_params, c_dim, kernel_size, upscaling, url, name
@@ -79,7 +79,7 @@ class RDN(ImageModel):
             self,
             arch_params={},
             patch_size=None,
-            c_dim=3,
+            c_dim=1,
             kernel_size=3,
             upscaling='ups',
             init_extreme_val=0.05,

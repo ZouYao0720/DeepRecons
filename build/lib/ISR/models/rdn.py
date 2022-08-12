@@ -40,7 +40,7 @@ def get_network(weights):
         name = WEIGHTS_URLS[weights]['name']
     else:
         raise ValueError('Available RDN network weights: {}'.format(list(WEIGHTS_URLS.keys())))
-    c_dim = 3
+    c_dim = 1
     kernel_size = 3
     upscaling = 'ups'
     return arch_params, c_dim, kernel_size, upscaling, url, name
@@ -79,7 +79,7 @@ class RDN(ImageModel):
             self,
             arch_params={},
             patch_size=None,
-            c_dim=3,
+            c_dim=1,
             kernel_size=3,
             upscaling='ups',
             init_extreme_val=0.05,
@@ -196,7 +196,7 @@ class RDN(ImageModel):
         return concatenate(rdb_concat, axis=3, name='LRLs_Concat')
     
     def _build_rdn(self):
-        LR_input = Input(shape=(self.patch_size, self.patch_size, 3), name='LR')
+        LR_input = Input(shape=(self.patch_size, self.patch_size, 1), name='LR') # gray image
         F_m1 = Conv2D(
             self.G0,
             kernel_size=self.kernel_size,

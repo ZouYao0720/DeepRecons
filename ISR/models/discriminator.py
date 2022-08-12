@@ -55,6 +55,7 @@ class Discriminator:
         """ Puts the discriminator's layers together. """
         
         HR = Input(shape=(self.patch_size, self.patch_size, 1))
+
         x = self._conv_block(HR, filters=64, strides=1, batch_norm=False, count=1)
         for i in range(self.block_num):
             x = self._conv_block(
