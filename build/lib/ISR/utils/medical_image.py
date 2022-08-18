@@ -201,6 +201,9 @@ class MedicalImageHandler:
         ### iterate every slice in a 3D medical raw image to make fully useage of the data
         for slice_idx in range(self.slices):
             for res in ['lr', 'hr']:
+                ### conver to RGE 3 channel
+                img[res] = np.stack((medical_img[res][slice_idx,:,:],)*3,axis = -1)
+                print(img[res].shape)
                 if res == 'hr':
                     img[res] = medical_img[res][slice_idx,:,:].reshape(self.width, self.height, 1) ## for cv data it is a RGB 3 channel image, reshape to a grep image with one channel
                 else:
