@@ -203,11 +203,10 @@ class MedicalImageHandler:
             for res in ['lr', 'hr']:
                 ### conver to RGE 3 channel
                 img[res] = np.stack((medical_img[res][slice_idx,:,:],)*3,axis = -1)
-                print(img[res].shape)
-                if res == 'hr':
-                    img[res] = medical_img[res][slice_idx,:,:].reshape(self.width, self.height, 1) ## for cv data it is a RGB 3 channel image, reshape to a grep image with one channel
-                else:
-                    img[res] = medical_img[res][slice_idx,:,:].reshape(self.width//self.scale, self.height//self.scale, 1)
+                #if res == 'hr':
+                #    img[res] = medical_img[res][slice_idx,:,:].reshape(self.width, self.height, 1) ## for cv data it is a RGB 3 channel image, reshape to a grep image with one channel
+                #else:
+                #    img[res] = medical_img[res][slice_idx,:,:].reshape(self.width//self.scale, self.height//self.scale, 1)
                     
             print ('lr_img', img['lr'].shape)
             print ('hr_img', img['hr'].shape)
