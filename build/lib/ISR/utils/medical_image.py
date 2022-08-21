@@ -1,3 +1,4 @@
+from __future__ import barry_as_FLUFL
 import os
 
 import imageio
@@ -207,7 +208,7 @@ class MedicalImageHandler:
                 #    img[res] = medical_img[res][slice_idx,:,:].reshape(self.width, self.height, 1) ## for cv data it is a RGB 3 channel image, reshape to a grep image with one channel
                 #else:
                 #    img[res] = medical_img[res][slice_idx,:,:].reshape(self.width//self.scale, self.height//self.scale, 1)
-                    
+            
             print ('lr_img', img['lr'].shape)
             print ('hr_img', img['hr'].shape)
             
@@ -224,6 +225,12 @@ class MedicalImageHandler:
             print ('lr_affine', batch['lr_affine'].shape) # 4*40*40*1
             print ('hr', batch['hr'].shape) # 4*40*40*1
             print ('hr_affine', batch['hr_affine'].shape) # 4*40*40*1
+            if batch['hr'].shape[1] != 80 or batch['hr'].shape[2] != 80:
+                print("error batch size")
+                break
+            if batch['lr'].shape[1] != 40 or batch['lr'].shape[2] != 40:
+                print("error batch size")
+                break
             batches_lr.append(batch['lr'])
             batches_lr.append(batch['lr_affine'])
             batches_hr.append(batch['hr'])
@@ -272,7 +279,7 @@ class MedicalImageHandler:
         Returns a batch for each image in the validation set.
         Flattens and splits them to feed it to Keras's model.evaluate.
         """
-        
+        batch_size = int(batch_size/8)
         if self.n_validation_samples:
             batches = self.get_validation_batches(batch_size)
             valid_set = {'lr': [], 'hr': []}
@@ -376,6 +383,9 @@ class MedicalImageHandler:
         pages = int(len(img_arr)/(self.width*self.height))
         self.slices = pages
         img_arr = np.reshape(img_arr,(pages,self.width,self.height))/self.max_value
+
+        self.slices = 4
+        img_arr = img_arr[:self.slices,:,:]
         #print (img_arr.shape)
         f.close()
         return img_arr
@@ -394,6 +404,9 @@ class MedicalImageHandler:
             img = img.resize(size=(img.size[0]//self.scale, img.size[1]//self.scale), resample=Image.BICUBIC)
             #print (np.asarray(img).shape)
             resized_img_arr.append(np.asarray(img))
+        resized_img_arr = np.stack(resized_img_arr,axis=0)
+        self.slices = 4
+        resized_img_arr = resized_img_arr[:self.slices,:,:]
         f.close()
         #print (np.stack(resized_img_arr,axis=0).shape)
         

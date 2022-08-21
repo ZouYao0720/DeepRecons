@@ -54,6 +54,6 @@ trainer = Trainer(
 trainer.train(
     epochs=1,
     steps_per_epoch=20,
-    batch_size=4,
+    batch_size=216,
     monitored_metrics={'val_generator_PSNR_Y': 'max'}
 )

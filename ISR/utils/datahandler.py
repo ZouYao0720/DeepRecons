@@ -175,12 +175,14 @@ class DataHandler:
         for res in ['lr', 'hr']:
             img_path = os.path.join(self.folders[res], self.img_list[res][idx])
             img[res] = imageio.imread(img_path) / 255.0
-            print(img[res])
         batch = self._crop_imgs(img, batch_size, flatness)
         transforms = np.random.randint(0, 3, (batch_size, 2)) # batch size
         batch['lr'] = self._transform_batch(batch['lr'], transforms)
         batch['hr'] = self._transform_batch(batch['hr'], transforms)
         
+        print ('final batch lr', batch['lr'].shape)
+        print ('final batch hr', batch['hr'].shape)
+
         return batch
     
     def get_validation_batches(self, batch_size):

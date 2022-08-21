@@ -322,13 +322,14 @@ class Trainer:
 
             epoch_start = time()
             for step in tqdm(range(steps_per_epoch)):
-                batch = self.train_dh.get_batch(batch_size, flatness=flatness)
+                batch = self.train_dh.get_batch(int(batch_size/8), flatness=flatness)
                 y_train = [batch['hr']]
                 training_losses = {}
 
                 ## Discriminator training
                 if self.discriminator:
                     sr = self.generator.model.predict(batch['lr'])
+                    print("discriminator train on batch")
                     d_loss_real = self.discriminator.model.train_on_batch(batch['hr'], valid)
                     d_loss_fake = self.discriminator.model.train_on_batch(sr, fake)
                     d_loss_fake = self._format_losses(
