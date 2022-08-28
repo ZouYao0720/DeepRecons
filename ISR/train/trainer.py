@@ -322,7 +322,7 @@ class Trainer:
 
             epoch_start = time()
             for step in tqdm(range(steps_per_epoch)):
-                batch = self.train_dh.get_batch(int(batch_size/8), flatness=flatness)
+                batch = self.train_dh.get_batch(int(batch_size/2), flatness=flatness)
                 y_train = [batch['hr']]
                 training_losses = {}
 

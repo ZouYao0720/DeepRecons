@@ -188,66 +188,47 @@ class MedicalImageHandler:
         if not idx:
             # randomly select one image. idx is given at validation time.
             idx = np.random.choice(range(len(self.img_list['hr'])))
+        random_slice = np.random.choice(range(6,22))  #### CBCT raw image with 28 slices
         img = {}
         medical_img = {}
         img_path = os.path.join(self.folders['lr'], self.img_list['lr'][idx])
-        medical_img['lr'] = self._read_raw_medical_lr(img_path)
+        medical_img['lr'] = self._read_raw_medical_lr(img_path,random_slice)
         img_path = os.path.join(self.folders['hr'], self.img_list['hr'][idx])
-        medical_img['hr'] = self._read_raw_medical_hr(img_path)
+        medical_img['hr'] = self._read_raw_medical_hr(img_path,random_slice)
 
         ### medical_img with size slices * self.width* self.height
         batches_lr = []
         batches_hr = []
         
         ### iterate every slice in a 3D medical raw image to make fully useage of the data
-        for slice_idx in range(self.slices):
-            for res in ['lr', 'hr']:
-                ### conver to RGE 3 channel
-                img[res] = np.stack((medical_img[res][slice_idx,:,:],)*3,axis = -1)
-                #if res == 'hr':
-                #    img[res] = medical_img[res][slice_idx,:,:].reshape(self.width, self.height, 1) ## for cv data it is a RGB 3 channel image, reshape to a grep image with one channel
-                #else:
-                #    img[res] = medical_img[res][slice_idx,:,:].reshape(self.width//self.scale, self.height//self.scale, 1)
+        for res in ['lr', 'hr']:
+            ### conver to RGE 3 channel
+            img[res] = np.stack((medical_img[res],)*3,axis = -1)
+            #if res == 'hr':
+            #    img[res] = medical_img[res][slice_idx,:,:].reshape(self.width, self.height, 1) ## for cv data it is a RGB 3 channel image, reshape to a grep image with one channel
+            #else:
+            #    img[res] = medical_img[res][slice_idx,:,:].reshape(self.width//self.scale, self.height//self.scale, 1)
             
-            print ('lr_img', img['lr'].shape)
-            print ('hr_img', img['hr'].shape)
+        print ('lr_img', img['lr'].shape)
+        print ('hr_img', img['hr'].shape)
             
-            # batch['lr']: np.array: batch size, patch size * patch size
-            # batch['hr']: np.array: batch size, patch size * patch size
-            batch = self._crop_imgs(img, batch_size, flatness)
-            # random transform the images, we can also run this multiple times and use it to augment the data
-            transforms = np.random.randint(0, 3, (batch_size, 2))
-            batch['lr_affine'] = self._transform_batch(batch['lr'], transforms)
-            batch['hr_affine'] = self._transform_batch(batch['hr'], transforms)
+        # batch['lr']: np.array: batch size, patch size * patch size
+        # batch['hr']: np.array: batch size, patch size * patch size
+        batch = self._crop_imgs(img, batch_size, flatness)
+        # random transform the images, we can also run this multiple times and use it to augment the data
+        transforms = np.random.randint(0, 3, (batch_size, 2))
+        batch['lr_affine'] = self._transform_batch(batch['lr'], transforms)
+        batch['hr_affine'] = self._transform_batch(batch['hr'], transforms)
             
-            # combine all the results into the bigger batch
-            print ('lr', batch['lr'].shape) # 4*40*40*1
-            print ('lr_affine', batch['lr_affine'].shape) # 4*40*40*1
-            print ('hr', batch['hr'].shape) # 4*40*40*1
-            print ('hr_affine', batch['hr_affine'].shape) # 4*40*40*1
-            if batch['hr'].shape[1] != 80 or batch['hr'].shape[2] != 80:
-                print("error batch size")
-                break
-            if batch['lr'].shape[1] != 40 or batch['lr'].shape[2] != 40:
-                print("error batch size")
-                break
-            batches_lr.append(batch['lr'])
-            batches_lr.append(batch['lr_affine'])
-            batches_hr.append(batch['hr'])
-            batches_hr.append(batch['hr_affine'])
-            
-            '''
-            # get all pre-define augmentions
-            augmentions = self._get_valid_augmentions()
-            for augment_idx in range(len(augmentions)):
-                batch['lr_aug_%d'%augment_idx], batch['hr_aug_%d'%augment_idx] = self._augment_batch(batch, augmentions[augment_idx])
-                
-                print ('lr_aug_%d'%augment_idx, batch['lr_aug_%d'%augment_idx].shape)
-                print ('hr_aug_%d'%augment_idx, batch['hr_aug_%d'%augment_idx].shape)
-
-                batches_lr.append(batch['lr_aug_%d'%augment_idx])
-                batches_hr.append(batch['hr_aug_%d'%augment_idx])
-            '''
+        # combine all the results into the bigger batch
+        print ('lr', batch['lr'].shape) # 4*40*40*1
+        print ('lr_affine', batch['lr_affine'].shape) # 4*40*40*1
+        print ('hr', batch['hr'].shape) # 4*40*40*1
+        print ('hr_affine', batch['hr_affine'].shape) # 4*40*40*1
+        batches_lr.append(batch['lr'])
+        batches_lr.append(batch['lr_affine'])
+        batches_hr.append(batch['hr'])
+        batches_hr.append(batch['hr_affine'])
             
         # final_batch * self.width* self.height
         # final_batch = slices * (1+1+5)*batch)
@@ -279,7 +260,7 @@ class MedicalImageHandler:
         Returns a batch for each image in the validation set.
         Flattens and splits them to feed it to Keras's model.evaluate.
         """
-        batch_size = int(batch_size/8)
+        batch_size = int(batch_size/2)
         if self.n_validation_samples:
             batches = self.get_validation_batches(batch_size)
             valid_set = {'lr': [], 'hr': []}
@@ -375,7 +356,7 @@ class MedicalImageHandler:
 
         return augmentions
 
-    def _read_raw_medical_hr(self, img_path):
+    def _read_raw_medical_hr(self, img_path,id):
         """ Read the .raw and return the n gray image as a list of np.array. """
         f = open(img_path, 'rb')
         img_str = f.read()
@@ -384,15 +365,11 @@ class MedicalImageHandler:
         self.slices = pages
         img_arr = np.reshape(img_arr,(self.width,self.height,pages))/self.max_value
 
-        self.slices = 4
-        reshape_img_arr =[]
-        for slice_idex in range(self.slices):
-            reshape_img_arr.append(img_arr[:,:,slice_idex])
         #print (img_arr.shape)
         f.close()
-        return np.stack(reshape_img_arr,axis=0)
+        return img_arr[:,:,id]
         
-    def _read_raw_medical_lr(self, img_path):
+    def _read_raw_medical_lr(self, img_path,id):
         """ Read the .raw and return the n gray image as a list of np.array. """
         f = open(img_path, 'rb')
         img_str = f.read()
@@ -401,15 +378,9 @@ class MedicalImageHandler:
         self.slices = pages
         img_arr = np.reshape(img_arr,(self.width,self.height,pages))/self.max_value
         resized_img_arr = []
-        for slice_idx in range(pages):
-            img = Image.fromarray(img_arr[:,:,slice_idx])
-            img = img.resize(size=(img.size[0]//self.scale, img.size[1]//self.scale), resample=Image.BICUBIC)
-            #print (np.asarray(img).shape)
-            resized_img_arr.append(np.asarray(img))
-        resized_img_arr = np.stack(resized_img_arr,axis=0)
-        self.slices = 4
-        resized_img_arr = resized_img_arr[:self.slices,:,:]
+        img = Image.fromarray(img_arr[:,:,id])
+        resized_img_arr = img.resize(size=(img.size[0]//self.scale, img.size[1]//self.scale), resample=Image.BICUBIC)
         f.close()
         #print (np.stack(resized_img_arr,axis=0).shape)
         
-        return np.stack(resized_img_arr,axis=0)
+        return np.asarray(resized_img_arr)
