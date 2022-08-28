@@ -382,13 +382,15 @@ class MedicalImageHandler:
         img_arr = np.frombuffer(img_str, np.uint16)
         pages = int(len(img_arr)/(self.width*self.height))
         self.slices = pages
-        img_arr = np.reshape(img_arr,(pages,self.width,self.height))/self.max_value
+        img_arr = np.reshape(img_arr,(self.width,self.height,pages))/self.max_value
 
         self.slices = 4
-        img_arr = img_arr[:self.slices,:,:]
+        reshape_img_arr =[]
+        for slice_idex in range(self.slices):
+            reshape_img_arr.append(img_arr[:,:,slice_idex])
         #print (img_arr.shape)
         f.close()
-        return img_arr
+        return np.stack(reshape_img_arr,axis=0)
         
     def _read_raw_medical_lr(self, img_path):
         """ Read the .raw and return the n gray image as a list of np.array. """
@@ -397,10 +399,10 @@ class MedicalImageHandler:
         img_arr = np.frombuffer(img_str, np.uint16)
         pages = int(len(img_arr)/(self.width*self.height))
         self.slices = pages
-        img_arr = np.reshape(img_arr,(pages,self.width,self.height))/self.max_value
+        img_arr = np.reshape(img_arr,(self.width,self.height,pages))/self.max_value
         resized_img_arr = []
         for slice_idx in range(pages):
-            img = Image.fromarray(img_arr[slice_idx])
+            img = Image.fromarray(img_arr[:,:,slice_idx])
             img = img.resize(size=(img.size[0]//self.scale, img.size[1]//self.scale), resample=Image.BICUBIC)
             #print (np.asarray(img).shape)
             resized_img_arr.append(np.asarray(img))
