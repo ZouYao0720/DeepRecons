@@ -3,7 +3,7 @@ import numpy as np
 
 def process_array(image_array, expand=True):
     """ Process a 3-dimensional array into a scaled, 4 dimensional batch of size 1. """
-    
+    print("get in process array ===================")
     image_batch = image_array / 255.0
     if expand:
         image_batch = np.expand_dims(image_batch, axis=0)
@@ -12,7 +12,7 @@ def process_array(image_array, expand=True):
 
 def process_output(output_tensor):
     """ Transforms the 4-dimensional output tensor into a suitable image format. """
-    
+    print("get in process ++++++++++++++++")
     sr_img = output_tensor.clip(0, 1) * 255
     sr_img = np.uint8(sr_img)
     return sr_img
