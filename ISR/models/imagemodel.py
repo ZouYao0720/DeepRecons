@@ -45,8 +45,8 @@ class ImageModel:
                     collect = np.append(collect, batch, axis=0)
             
             scale = self.scale
-            padded_size_scaled = tuple(np.multiply(p_shape[0:2], scale)) + (3,)
-            scaled_image_shape = tuple(np.multiply(input_image_array.shape[0:2], scale)) + (3,)
+            padded_size_scaled = tuple(np.multiply(p_shape[0:2], scale)) + (1,)
+            scaled_image_shape = tuple(np.multiply(input_image_array.shape[0:2], scale)) + (1,)
             sr_img = stich_together(
                 collect,
                 padded_image_shape=padded_size_scaled,

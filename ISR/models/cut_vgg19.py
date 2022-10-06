@@ -20,7 +20,7 @@ class Cut_VGG19:
     
     def __init__(self, patch_size, layers_to_extract):
         self.patch_size = patch_size
-        self.input_shape = (patch_size,) * 2 + (3,)
+        self.input_shape = (patch_size,) * 2 + (1,)
         self.layers_to_extract = layers_to_extract
         self.logger = get_logger(__name__)
         

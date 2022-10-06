@@ -19,7 +19,7 @@ class Cut_VGG19:
     
     def __init__(self, patch_size, layers_to_extract):
         self.patch_size = patch_size
-        self.input_shape = (patch_size,) * 2 + (3,)
+        self.input_shape = (patch_size,) * 2 + (1,)
         self.input_shape_conv = (patch_size,) * 2 + (1,)
         self.layers_to_extract = layers_to_extract
         self.logger = get_logger(__name__)
@@ -37,7 +37,7 @@ class Cut_VGG19:
         """
         
         input_tensor = Input(shape=self.input_shape_conv)
-        x = Conv2D(3,(3,3),padding='same')(input_tensor)    # x has a dimension of (IMG_SIZE,IMG_SIZE,3)
+        x = Conv2D(1,(3,3),padding='same')(input_tensor)    # x has a dimension of (IMG_SIZE,IMG_SIZE,1)
         
         vgg = VGG19(weights='imagenet', include_top=False, input_shape=self.input_shape)
         vgg.trainable = False

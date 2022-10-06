@@ -104,7 +104,7 @@ class Predictor:
 
     def _forward_pass(self, file_path):
         lr_img = imageio.imread(file_path)
-        if lr_img.shape[2] == 3:
+        if lr_img.shape[2] == 1:
             sr_img = self.model.predict(lr_img)
             return sr_img
         else:
