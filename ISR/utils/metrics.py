@@ -24,7 +24,7 @@ def RGB_to_Y(image):
     Y = 16 + (65.738 * R) + 129.057 * G + 25.064 * B ## this for RGB image
 
     Y = (R + G + B) / 4095 ## this is for medical raw image with uint12_t format
-    return Y / 255.0
+    return Y / 4095.0
 
 
 def PSNR_Y(y_true, y_pred, MAXp=1):
