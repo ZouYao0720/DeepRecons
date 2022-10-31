@@ -22,7 +22,7 @@ class MedicalImageHandler:
         self.n_validation_samples = n_validation_samples
         self.patch_size = patch_size
         self.scale = scale
-        self.max_value = 65535.0
+        self.max_value = 4095.0
         self.patch_size = {'lr': patch_size, 'hr': patch_size * self.scale}
         self.logger = get_logger(__name__)
         self._make_img_list()

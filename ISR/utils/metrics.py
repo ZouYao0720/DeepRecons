@@ -21,7 +21,9 @@ def RGB_to_Y(image):
     G = image[:, :, :, 1]
     B = image[:, :, :, 2]
     
-    Y = 16 + (65.738 * R) + 129.057 * G + 25.064 * B
+    Y = 16 + (65.738 * R) + 129.057 * G + 25.064 * B ## this for RGB image
+
+    Y = (R + G + B) / 4095 ## this is for medical raw image with uint12_t format
     return Y / 255.0
 
 
