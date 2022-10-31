@@ -14,7 +14,7 @@ class ImageModel:
     Contains functions that are common across the super-scaling models.
     """
     
-    def predict(self, input_image_array, by_patch_of_size=None, batch_size=10, padding_size=2):
+    def predict(self, input_image_array, by_patch_of_size=None, batch_size=10, padding_size=8):
         """
         Processes the image array into a suitable format
         and transforms the network output in a suitable image format.
