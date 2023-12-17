@@ -4,7 +4,7 @@ import imageio
 import numpy as np
 import imgaug.augmenters as iaa
 from ISR.utils.logger import get_logger
-iaa.seed(1)
+#iaa.seed(1)
 
 class MedicalImageHandler:
     def __init__(self, lr_dir, hr_dir, patch_size, scale,  resize = False, factor = 1, n_validation_samples=None):
@@ -18,7 +18,7 @@ class MedicalImageHandler:
         self.n_validation_samples = n_validation_samples
         self.patch_size = patch_size
         self.scale = scale
-        self.max_value = 65535.0
+        self.max_value = 4095.0
         self.patch_size = {'lr': patch_size, 'hr': patch_size * self.scale}
         self.logger = get_logger(__name__)
         self._make_img_list()

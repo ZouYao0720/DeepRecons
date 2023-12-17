@@ -21,7 +21,9 @@ def RGB_to_Y(image):
     G = image[:, :, :, 1]
     B = image[:, :, :, 2]
     
-    Y = 16 + (65.738 * R) + 129.057 * G + 25.064 * B
+    Y = 16 + (65.738 * R) + 129.057 * G + 25.064 * B ## this is for RGB image
+
+    Y = (R + B + G) / 3 ## this is for raw image with uint16 data format
     return Y / 255.0
 
 

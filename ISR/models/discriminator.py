@@ -8,11 +8,9 @@ class Discriminator:
     """
     Implementation of the discriminator network for the adversarial
     component of the perceptual loss.
-
     Args:
         patch_size: integer, determines input size as (patch_size, patch_size, 3).
         kernel_size: size of the kernel in the conv blocks.
-
     Attributes:
         model: Keras model.
         name: name used to identify what discriminator is used during GANs training.
@@ -20,7 +18,6 @@ class Discriminator:
             in the compound model built by the trainer class.
         block_param: dictionary, determines the number of filters and the strides for each
             conv block.
-
     """
     
     def __init__(self, patch_size, kernel_size=3):
@@ -54,7 +51,7 @@ class Discriminator:
     def _build_disciminator(self):
         """ Puts the discriminator's layers together. """
         
-        HR = Input(shape=(self.patch_size, self.patch_size, 1))
+        HR = Input(shape=(self.patch_size, self.patch_size, 3))
         x = self._conv_block(HR, filters=64, strides=1, batch_norm=False, count=1)
         for i in range(self.block_num):
             x = self._conv_block(
