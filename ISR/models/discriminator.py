@@ -51,6 +51,10 @@ class Discriminator:
     def _build_disciminator(self):
         """ Puts the discriminator's layers together. """
         
+<<<<<<< HEAD
+=======
+        print("get in buiod discriminator", self.patch_size)
+>>>>>>> ff88931492b49d4437281c17ba0b619f858f798a
         HR = Input(shape=(self.patch_size, self.patch_size, 3))
         x = self._conv_block(HR, filters=64, strides=1, batch_norm=False, count=1)
         for i in range(self.block_num):
